@@ -1,20 +1,26 @@
 @import "tailwindcss";
 
 :root {
-  --bg-primary: #0a0a0f;
-  --bg-card: #111118;
-  --bg-hover: #1a1a24;
-  --border: #1e1e2e;
-  --text-primary: #e4e4e7;
-  --text-secondary: #71717a;
-  --cyan: #00e5ff;
-  --cyan-dim: #00e5ff33;
-  --amber: #ffb300;
-  --amber-dim: #ffb30033;
-  --rose: #ff1744;
-  --rose-dim: #ff174433;
-  --green: #00c853;
-  --green-dim: #00c85333;
+  /* Phosphor Observatory palette — warm phosphor amber on deep ink blue */
+  --bg-primary: #0a0d14;
+  --bg-card: #12151e;
+  --bg-hover: #1a1e2a;
+  --border: #242838;
+  --text-primary: #f4f1e8;
+  --text-secondary: #6c6f7f;
+
+  /* Accents — variable names kept for compatibility */
+  --cyan: #f2c14a;         /* phosphor (primary) — sodium-vapor amber */
+  --cyan-dim: #f2c14a22;
+  --amber: #ff8a3d;        /* ember (secondary highlight) */
+  --amber-dim: #ff8a3d22;
+  --rose: #e63946;         /* crimson (loss / alerts) */
+  --rose-dim: #e6394622;
+  --green: #5be3a0;        /* jade (profit / go) */
+  --green-dim: #5be3a022;
+
+  /* Ambient heartbeat — matches bot poll interval */
+  --heartbeat: 10s;
 }
 
 @theme inline {
@@ -32,7 +38,8 @@
   --color-rose-dim: var(--rose-dim);
   --color-green: var(--green);
   --color-green-dim: var(--green-dim);
-  --font-sans: var(--font-outfit);
+  --font-sans: var(--font-instrument);
+  --font-display: var(--font-fraunces);
   --font-mono: var(--font-jetbrains);
 }
 
@@ -40,33 +47,112 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Grid background pattern */
+/* Editorial display serif — use for section labels and ritualistic moments */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.01em;
+}
+
+/* Tabular numbers — always use for prices and data */
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Quieter, more atmospheric grid background */
 .grid-bg {
   background-image:
-    linear-gradient(rgba(30, 30, 46, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(30, 30, 46, 0.3) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(36, 40, 56, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(36, 40, 56, 0.35) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
 }
 
-/* Glow effects */
+/* Grain overlay — tactile warmth, kills the AI-slop sterility */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.65 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* Very subtle CRT scanlines — applied to body */
+.scanlines::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.012) 0px,
+    rgba(255, 255, 255, 0.012) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Phosphor bloom glow */
 .glow-cyan {
-  box-shadow: 0 0 20px var(--cyan-dim), 0 0 40px rgba(0, 229, 255, 0.1);
+  box-shadow: 0 0 24px var(--cyan-dim), 0 0 48px rgba(242, 193, 74, 0.08);
 }
 
 .glow-text-cyan {
-  text-shadow: 0 0 10px var(--cyan-dim);
+  text-shadow:
+    0 0 8px rgba(242, 193, 74, 0.45),
+    0 0 22px rgba(242, 193, 74, 0.18);
 }
 
-/* Pulsing dot */
+.glow-text-amber {
+  text-shadow:
+    0 0 8px rgba(255, 138, 61, 0.45),
+    0 0 22px rgba(255, 138, 61, 0.18);
+}
+
+.glow-text-rose {
+  text-shadow:
+    0 0 8px rgba(230, 57, 70, 0.45),
+    0 0 22px rgba(230, 57, 70, 0.18);
+}
+
+/* Legacy pulse-dot — gentler cadence */
 @keyframes pulse-dot {
   0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.2); }
+  50% { opacity: 0.55; transform: scale(1.15); }
 }
 
 .pulse-dot {
-  animation: pulse-dot 2s ease-in-out infinite;
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}
+
+/* Ambient heartbeat — everything synced to the bot's poll interval */
+@keyframes heartbeat {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+
+@keyframes heartbeat-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(242, 193, 74, 0.0);
+  }
+  50% {
+    box-shadow: 0 0 18px 0 rgba(242, 193, 74, 0.18);
+  }
+}
+
+.heartbeat {
+  animation: heartbeat var(--heartbeat) ease-in-out infinite;
+}
+
+.heartbeat-glow {
+  animation: heartbeat-glow var(--heartbeat) ease-in-out infinite;
 }
 
 /* Scrollbar */
@@ -86,4 +172,10 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-secondary);
+}
+
+/* Selection */
+::selection {
+  background: var(--cyan-dim);
+  color: var(--cyan);
 }
