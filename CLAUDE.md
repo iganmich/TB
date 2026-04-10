@@ -79,20 +79,20 @@ frontend/
 - Layout: 60px icon nav rail (expand on hover), top status bar, grid background
 
 ## Implementation Status
-- [x] Project directory created at ~/Projects/pionex-trading-bot
-- [x] Git initialized with iganmich identity
-- [x] VS Code workspace: ~/Projects/Xamadu/IGANMICH.code-workspace
-- [ ] GitHub repo creation
-- [ ] Backend scaffold (pyproject.toml, config.py, .env.example, .gitignore)
-- [ ] Supabase schema (6 tables)
-- [ ] pionex_client.py (HMAC auth)
-- [ ] db.py (Supabase CRUD)
-- [ ] models.py (Pydantic)
-- [ ] bot.py (state machine)
-- [ ] scheduler.py + main.py (FastAPI + APScheduler)
-- [ ] Frontend scaffold
-- [ ] Dashboard pages
-- [ ] Deployment
+- [x] Project scaffold + GitHub repo (iganmich/TB)
+- [x] Supabase schema (6 tables, RLS enabled)
+- [x] Backend: pionex_client, db, models, bot, scheduler, main (FastAPI + APScheduler)
+- [x] Frontend: Terminal Luxe dashboard (5 pages + server-side proxy routes)
+- [x] Backend deployed: https://tb.xamadu.com (Coolify on Hetzner)
+- [x] Frontend deployed: https://tb-khaki.vercel.app (Vercel Hobby, iganmich account)
+- [x] CORS locked to Vercel domain
+
+## Deployment Notes
+- **Backend**: Coolify project "Pionex Trading Bot", Dockerfile-based. Critical: set "Ports Exposes" to `8000` in Configuration → General (defaults to 3000 → 502).
+- **Frontend**: Vercel project `tb`, Root Directory = `frontend`, Framework Preset = **Next.js** (auto-detect picked "Standard" which breaks routing — must manually set).
+- **Env vars (Vercel)**: `BACKEND_URL=https://tb.xamadu.com`, `DASHBOARD_API_KEY=<key>`
+- **Env vars (Coolify)**: `CORS_ORIGINS=https://tb-khaki.vercel.app,http://localhost:3000`
+- **Cloudflare**: SSL mode must be **Full** for tb.xamadu.com (not Flexible) to avoid redirect loops.
 
 ## Full Plan
 See `docs/PLAN.md` for the detailed implementation plan.

@@ -8,7 +8,7 @@ import db
 import scheduler
 import pionex_client as px
 from config import settings
-from models import BotConfig, BotConfigUpdate, BotState, DashboardResponse
+from models import BotConfig, BotConfigUpdate, BotState, BotStatus, DashboardResponse
 
 
 # --- Auth ---
@@ -106,6 +106,36 @@ async def update_config(update: BotConfigUpdate) -> BotConfig:
     changes = update.model_dump(exclude_none=True)
     if not changes:
         raise HTTPException(status_code=400, detail="No fields to update")
+
+    # Symbol change requires special handling: validate + reset state
+    new_symbol = changes.get("symbol")
+    if new_symbol is not None:
+        current_config = db.get_bot_config()
+        if new_symbol != current_config.symbol:
+            # Reject mid-position symbol swaps
+            state = db.get_bot_state()
+            if state.status != BotStatus.WATCHING:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Cannot change symbol while bot is {state.status.value}. Close the position first.",
+                )
+            # Validate the new symbol against Pionex
+            try:
+                await px.get_ticker(new_symbol)
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Invalid symbol '{new_symbol}': {e}")
+            # Reset state tied to the old asset
+            db.update_bot_state(
+                reference_price=None,
+                peak_price=None,
+                entry_price=None,
+                entry_size=None,
+                buy_order_id=None,
+                sell_order_id=None,
+                status=BotStatus.WATCHING.value,
+            )
+            db.log("INFO", f"Symbol changed from {current_config.symbol} to {new_symbol}; state reset")
+
     # Convert Decimal to str for Supabase
     db_changes = {k: str(v) if isinstance(v, Decimal) else v for k, v in changes.items()}
     db.update_bot_config(**db_changes)

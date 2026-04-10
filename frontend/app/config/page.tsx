@@ -8,6 +8,7 @@ import { Card } from "@/components/card";
 export default function ConfigPage() {
   const { data: config, refresh } = usePolling<BotConfig>(getBotConfig, 10000);
   const [form, setForm] = useState({
+    symbol: "",
     position_size: "",
     dip_pct: "",
     trail_pct: "",
@@ -15,10 +16,12 @@ export default function ConfigPage() {
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (config) {
       setForm({
+        symbol: config.symbol,
         position_size: config.position_size,
         dip_pct: (Number(config.dip_pct) * 100).toString(),
         trail_pct: (Number(config.trail_pct) * 100).toString(),
@@ -30,16 +33,24 @@ export default function ConfigPage() {
   const handleSave = async () => {
     setSaving(true);
     setSaved(false);
+    setError(null);
     try {
-      await updateBotConfig({
+      const payload: Partial<BotConfig> = {
         position_size: form.position_size,
         dip_pct: (Number(form.dip_pct) / 100).toString(),
         trail_pct: (Number(form.trail_pct) / 100).toString(),
         poll_interval: parseInt(form.poll_interval),
-      });
+      };
+      // Only include symbol if it actually changed (backend validates + resets state)
+      if (config && form.symbol.trim().toUpperCase() !== config.symbol) {
+        payload.symbol = form.symbol.trim().toUpperCase();
+      }
+      await updateBotConfig(payload);
       setSaved(true);
       refresh();
       setTimeout(() => setSaved(false), 3000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
     } finally {
       setSaving(false);
     }
@@ -55,6 +66,11 @@ export default function ConfigPage() {
 
       <Card title="Bot Configuration">
         <div className="space-y-4">
+          <Field
+            label="Symbol (e.g. XRP_USDT)"
+            value={form.symbol}
+            onChange={(v) => setForm({ ...form, symbol: v })}
+          />
           <Field
             label="Position Size (USDT)"
             value={form.position_size}
@@ -94,6 +110,9 @@ export default function ConfigPage() {
               <span className="text-green text-sm font-mono">Saved</span>
             )}
           </div>
+          {error && (
+            <p className="text-rose text-xs font-mono pt-1 break-words">{error}</p>
+          )}
         </div>
       </Card>
 

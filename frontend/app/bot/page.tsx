@@ -72,7 +72,9 @@ export default function BotControl() {
         <Card>
           <p className="text-xs text-text-secondary uppercase tracking-wider mb-1">Position Size</p>
           <p className="text-lg font-mono text-text-primary">
-            {state.entry_size ? `${Number(state.entry_size).toFixed(4)} MON` : "---"}
+            {state.entry_size
+              ? `${Number(state.entry_size).toFixed(4)} ${config.symbol.split("_")[0]}`
+              : "---"}
           </p>
         </Card>
       </div>

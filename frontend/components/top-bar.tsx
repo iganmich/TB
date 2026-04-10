@@ -31,7 +31,9 @@ export function TopBar() {
 
         {/* Current price */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-text-secondary">MON/USDT</span>
+          <span className="text-xs text-text-secondary">
+            {data?.bot_config.symbol?.replace("_", "/") ?? "---"}
+          </span>
           <span className="text-sm font-mono text-cyan glow-text-cyan">{price}</span>
         </div>
       </div>

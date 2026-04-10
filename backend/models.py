@@ -37,6 +37,7 @@ class BotConfig(BaseModel):
 
 
 class BotConfigUpdate(BaseModel):
+    symbol: str | None = None
     position_size: Decimal | None = None
     dip_pct: Decimal | None = None
     trail_pct: Decimal | None = None
