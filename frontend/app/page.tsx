@@ -1,25 +1,47 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePolling } from "@/lib/hooks";
 import { getDashboard, getTrades, type DashboardData, type Trade } from "@/lib/api";
 import { Card } from "@/components/card";
 import { StatePipeline } from "@/components/state-pipeline";
+import { DipProximity } from "@/components/dip-proximity";
 
 export default function CommandCenter() {
-  const { data, loading } = usePolling<DashboardData>(getDashboard, 5000);
-  const { data: trades } = usePolling<Trade[]>(() => getTrades(5), 10000);
+  const { data, loading } = usePolling<DashboardData>(getDashboard, 30000);
+  const { data: trades } = usePolling<Trade[]>(() => getTrades(5), 30000);
+
+  // Track when the dashboard data most recently updated, so DipProximity can
+  // show a "last tick Xs ago" counter.
+  const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+  useEffect(() => {
+    if (data) setLastUpdate(new Date());
+  }, [data]);
 
   if (loading || !data) {
     return <Loading />;
   }
 
-  const { bot_state, current_price, balance_usdt, total_trades, winning_trades, total_pnl } = data;
+  const { bot_state, bot_config, current_price, balance_usdt, total_trades, winning_trades, total_pnl } = data;
   const winRate = total_trades > 0 ? ((winning_trades / total_trades) * 100).toFixed(1) : "0.0";
   const pnl = Number(total_pnl);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Command Center</h1>
+      <div className="flex items-baseline justify-between">
+        <h1 className="font-display italic text-3xl text-text-primary">Command Center</h1>
+        <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-text-secondary">
+          {bot_config.symbol.replace("_", " · ")}
+        </p>
+      </div>
+
+      {/* Dip Proximity — the hero */}
+      <DipProximity
+        state={bot_state}
+        config={bot_config}
+        currentPrice={current_price}
+        lastUpdate={lastUpdate}
+      />
 
       {/* State Pipeline */}
       <Card title="Bot Status">
@@ -46,7 +68,7 @@ export default function CommandCenter() {
             <StatCard label="Entry Price" value={Number(bot_state.entry_price).toFixed(6)} unit="USDT" />
           )}
           {bot_state.entry_size && (
-            <StatCard label="Position Size" value={Number(bot_state.entry_size).toFixed(4)} unit="MON" />
+            <StatCard label="Position Size" value={Number(bot_state.entry_size).toFixed(4)} unit={bot_config.symbol.split("_")[0]} />
           )}
           {bot_state.peak_price && (
             <StatCard label="Peak Price" value={Number(bot_state.peak_price).toFixed(6)} unit="USDT" color="text-amber" />
