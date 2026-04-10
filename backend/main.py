@@ -165,8 +165,10 @@ async def bot_stop():
 # --- Prices ---
 
 @app.get("/api/prices", dependencies=[Depends(verify_api_key)])
-async def prices(limit: int = 500):
-    return db.get_prices(limit=limit)
+async def prices(limit: int = 500, symbol: str | None = None):
+    if symbol is None:
+        symbol = db.get_bot_config().symbol
+    return db.get_prices(symbol=symbol, limit=limit)
 
 
 # --- Orders ---
